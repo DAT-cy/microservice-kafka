@@ -8,6 +8,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+
 
 @Component
 public class BookEventsHandler {
@@ -27,12 +29,11 @@ public class BookEventsHandler {
     public void  on(BookUpdateEvent bookUpdateEvent)
     {
         try {
-            BookEntity bookEntity = bookRepository.findById(bookUpdateEvent.getBookId()).orElse(null);
-            if (bookEntity == null) {
-                throw new RuntimeException();
-            }
-            BeanUtils.copyProperties(bookUpdateEvent, bookEntity);
-            bookRepository.save(bookEntity);
+            Optional<BookEntity> bookEntity = bookRepository.findById(bookUpdateEvent.getBookId());
+            bookEntity.ifPresent(bookEntity1 -> {
+                BeanUtils.copyProperties(bookUpdateEvent, bookEntity1);
+                bookRepository.save(bookEntity1);
+            });
 
         }catch (Exception e){
             e.printStackTrace();
@@ -42,10 +43,9 @@ public class BookEventsHandler {
     @EventHandler
     public void  on(BookDeleteEvent bookDeleteEvent)
     {
-        BookEntity bookEntity = bookRepository.findById(bookDeleteEvent.getBookId()).orElse(null);
-        if (bookEntity == null) {
-            throw new RuntimeException();
-        }
-        bookRepository.delete(bookEntity);
+        Optional<BookEntity> bookEntity = bookRepository.findById(bookDeleteEvent.getBookId());
+        bookEntity.ifPresent(bookEntity1 -> {
+            bookRepository.delete(bookEntity1);
+        });
     }
 }
